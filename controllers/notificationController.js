@@ -41,44 +41,6 @@ const sendReturnReminders = async (req, res) => {
   }
 };
 
-// Send return reminders
-const sendReturnReminders = async (req, res) => {
-  try {
-    const threeDaysFromNow = new Date();
-    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-
-    const loans = await Loan.find({
-      status: "active",
-      dueDate: {
-        $gte: new Date(threeDaysFromNow.getTime() - 24 * 60 * 60 * 1000),
-        $lt: new Date(threeDaysFromNow.getTime() + 24 * 60 * 60 * 1000),
-      },
-    })
-      .populate("user", "name email")
-      .populate("book", "title");
-
-    let sentCount = 0;
-    for (const loan of loans) {
-      const returnDate = new Date(loan.dueDate).toLocaleDateString();
-      const success = await emailService.sendReturnReminder(
-        loan.user.email,
-        loan.user.name,
-        loan.book.title,
-        returnDate
-      );
-      if (success) sentCount++;
-    }
-
-    res.json({
-      success: true,
-      message: `Sent ${sentCount} return reminders`,
-      count: sentCount,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
 // Send overdue notifications
 const sendOverdueNotifications = async (req, res) => {
   try {
