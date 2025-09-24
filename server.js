@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
+const cron = require("node-cron");
+const notificationService = require("./services/notificationService");
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(__dirname, ".env") });
@@ -20,6 +22,7 @@ app.use("/api/loans", require("./routes/loans"));
 app.use("/api/reservations", require("./routes/reservations"));
 app.use("/api/fines", require("./routes/fines"));
 app.use("/api/users", require("./routes/users"));
+app.use("/api/notifications", require("./routes/notifications"));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -37,4 +40,17 @@ mongoose
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // Schedule daily notifications at 9 AM
+  cron.schedule("0 9 * * *", async () => {
+    console.log("Running daily notifications...");
+    try {
+      await notificationService.runDailyNotifications();
+      console.log("Daily notifications completed");
+    } catch (error) {
+      console.error("Error running daily notifications:", error);
+    }
+  });
+
+  console.log("Daily notification scheduler started (runs at 9 AM)");
 });

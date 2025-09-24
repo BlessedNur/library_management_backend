@@ -9,7 +9,10 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: "No token" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Use a fallback JWT_SECRET if environment variable is not set
+    const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
+
+    const decoded = jwt.verify(token, jwtSecret);
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -19,6 +22,13 @@ const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.error("Auth error:", error);
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
     res.status(401).json({ message: "Invalid token" });
   }
 };

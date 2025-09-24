@@ -4,8 +4,10 @@ const mongoose = require("mongoose");
 const generateISBN = async () => {
   let isbn;
   let isUnique = false;
+  let attempts = 0;
+  const maxAttempts = 10; // Prevent infinite loops
 
-  while (!isUnique) {
+  while (!isUnique && attempts < maxAttempts) {
     // Generate a 13-digit number starting with 978 or 979 (common ISBN prefixes)
     const prefix = Math.random() > 0.5 ? "978" : "979";
     const randomDigits = Math.floor(Math.random() * 1000000000000)
@@ -13,13 +15,27 @@ const generateISBN = async () => {
       .padStart(10, "0");
     isbn = prefix + randomDigits;
 
-    // Check if this ISBN already exists
-    const existingBook = await mongoose
-      .model("Book", bookSchema)
-      .findOne({ isbn });
-    if (!existingBook) {
-      isUnique = true;
+    try {
+      // Check if this ISBN already exists
+      const existingBook = await mongoose
+        .model("Book", bookSchema)
+        .findOne({ isbn });
+      if (!existingBook) {
+        isUnique = true;
+      }
+    } catch (error) {
+      console.error("Error checking ISBN uniqueness:", error);
+      attempts++;
+      continue;
     }
+
+    attempts++;
+  }
+
+  if (!isUnique) {
+    // Fallback: use timestamp-based ISBN if we can't find a unique one
+    const timestamp = Date.now().toString();
+    isbn = "978" + timestamp.slice(-10);
   }
 
   return isbn;
