@@ -5,7 +5,13 @@ const getFines = async (req, res) => {
   try {
     const fines = await Fine.find()
       .populate("user", "name email")
-      .populate("loan");
+      .populate({
+        path: "loan",
+        populate: {
+          path: "book",
+          select: "title author",
+        },
+      });
     res.json(fines);
   } catch (error) {
     res.status(500).json({ message: "Server error" });

@@ -16,7 +16,7 @@ const seedDatabase = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(
-      process.env.MONGODB_URI || "mongodb://localhost:27017/library_management"
+      "mongodb+srv://blessednur67:HOODQUAN67@cluster0.wftw5hq.mongodb.net/library_management?retryWrites=true&w=majority&appName=Cluster0"
     );
     console.log("Connected to MongoDB");
 
